@@ -1,6 +1,7 @@
 
 import argparse
 import sys
+import re
 
 
 def output(line):
@@ -8,10 +9,41 @@ def output(line):
 
 
 def grep(lines, params):
-    for line in lines:
-        line = line.rstrip()
-        if params.pattern in line:
-            output(line)
+    # For lines that were used before. For context intersections
+    outputted_keys = []
+    for number_line, line in enumerate(lines):
+        pattern = params.pattern
+        if '?' in pattern:
+            pattern = pattern.replace('?', '.')
+        if '*' in pattern:
+            pattern = pattern.replace('*', '\w*')
+        params_list = [pattern, line]
+        if params.ignore_case:
+            params_list.append(re.IGNORECASE)
+        searched = re.search(*params_list)
+        found = not searched and params.invert or searched and not params.invert
+        if found:
+            start = number_line - params.before_context if params.before_context else number_line
+            end = number_line + params.after_context if len(lines) > number_line + params.after_context else len(lines) - 1
+
+            # If context - use context
+            if params.context:
+                start = number_line - params.context
+                end = number_line + params.context if len(lines) > number_line + params.context else len(lines) - 1
+
+            # +1 Because of including
+            # Getting used keys
+            line_keys = [c for c in range(start, end + 1) if c not in outputted_keys]
+            outputted_keys.extend(range(start, end + 1))
+
+            for key in line_keys:
+                output_string = lines[key]
+                if params.count:
+                    output_string = str(len(searched.group()))
+                # Change delimeter if string is in context
+                delimeter = '-' if params.context and not re.search(*[pattern, lines[key]]) else ':'
+                output('{}{}{}'.format(key + 1, delimeter, output_string) if params.line_number else output_string)
+
 
 
 def parse_args(args):
@@ -58,9 +90,8 @@ def parse_args(args):
 
 
 def main():
-    params = parse_args(sys.argv[1:])
+    params = parse_args(sys.argv[1:]) 
     grep(sys.stdin.readlines(), params)
-
 
 if __name__ == '__main__':
     main()
