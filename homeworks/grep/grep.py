@@ -23,13 +23,9 @@ def grep(lines, params):
         searched = re.search(*params_list)
         found = not searched and params.invert or searched and not params.invert
         if found:
-            start = number_line - params.before_context if params.before_context else number_line
-            end = number_line + params.after_context if len(lines) > number_line + params.after_context else len(lines) - 1
-
-            # If context - use context
-            if params.context:
-                start = number_line - params.context
-                end = number_line + params.context if len(lines) > number_line + params.context else len(lines) - 1
+            start = number_line - (params.before_context or params.context or 0)
+            number_lines_to_add = params.after_context or params.context or 0
+            end = number_line + number_lines_to_add if len(lines) > number_line + number_lines_to_add else len(lines) - 1
 
             # +1 Because of including
             # Getting used keys
