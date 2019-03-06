@@ -25,12 +25,12 @@ def grep(lines, params):
         if found:
             start = number_line - (params.before_context or params.context or 0)
             number_lines_to_add = params.after_context or params.context or 0
-            end = number_line + number_lines_to_add if len(lines) > number_line + number_lines_to_add else len(lines) - 1
-
-            # +1 Because of including
+            end = (number_line + number_lines_to_add 
+                if len(lines) > number_line + number_lines_to_add else len(lines) - 1) + 1
+            
             # Getting used keys
-            line_keys = [c for c in range(start, end + 1) if c not in outputted_keys]
-            outputted_keys.extend(range(start, end + 1))
+            line_keys = [c for c in range(start, end) if c not in outputted_keys]
+            outputted_keys.extend(range(start, end))
 
             for key in line_keys:
                 output_string = lines[key]
