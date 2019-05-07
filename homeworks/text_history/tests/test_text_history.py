@@ -155,7 +155,6 @@ class TextHistoryTestCase(TestCase):
         h.insert('a')
         h.insert('b')
         h.insert('c')
-
         with self.assertRaises(ValueError):
             h.get_actions(0, 10)
         with self.assertRaises(ValueError):

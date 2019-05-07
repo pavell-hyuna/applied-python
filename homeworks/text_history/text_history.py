@@ -1,3 +1,22 @@
+def compute_actions(actions):
+    result = []
+    for key, value in enumerate(actions):
+        next_action = actions[key + 1]
+        if  isinstance(value, InsertAction) == isinstance(next_action, InsertAction):
+            result.append(type(value)(value.pos, value.from_version, next_action.to_version,
+                                      value.text + next_action.text))
+            del actions[key + 1]
+        elif isinstance(value, DeleteAction) and isinstance(next_action, DeleteAction):
+            if next_action.pos == value.pos + value.length:
+                result.append(type(value)(value.pos, next_action.pos + next_action.length))
+                del actions[key + 1]
+            else:
+                result.append(value)
+        else:
+            result.append(value)
+    return result
+
+
 class Action:
 
     def __init__(self, pos, from_version, to_version, text='', length=None):
@@ -79,7 +98,6 @@ class TextHistory:
 
         insert_object = InsertAction(pos, self._version, self._version + 1, text)
         self._history.append(insert_object)
-
         self._text = self._text[:pos] + text + self._text[pos:]
         self._version += 1
         return self._version
@@ -129,4 +147,5 @@ class TextHistory:
         elif from_version < 0:
             raise ValueError
 
-        return list(filter(lambda x: from_version < x.version <= to_version, self._history))
+        actions = list(filter(lambda x: from_version < x.version <= to_version, self._history))
+        return actions
